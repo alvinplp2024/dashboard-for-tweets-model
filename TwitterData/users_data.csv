@@ -1,0 +1,6 @@
+text,sentiment,Label
+"I am testing this, looks good",positive,Economy
+"what the fuck is this, rains not showing up",negative,Social
+no rains today,negative,Social
+"Ruto must go, no good politics they have done",positive,Technology
+invite them to your house instaed,neutral,Political
