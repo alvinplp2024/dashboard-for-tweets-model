@@ -70,28 +70,24 @@ if query:
 
 
 
-# --- Classify User Input Based on Trained Data ---
-
 from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.linear_model import LogisticRegression
 from sklearn.pipeline import Pipeline
+import os
 
 st.subheader("Classify Your Own Tweet from Trained Data")
 
-# Create and train models for Sentiment and Labels
+# Train models once and cache
 @st.cache_resource
 def train_models():
-    # Drop rows with missing values in required columns
     clean_df = df.dropna(subset=['text', 'sentiment', 'Labels'])
 
-    # Vectorizer and classifier for sentiment
     sentiment_model = Pipeline([
         ('tfidf', TfidfVectorizer(stop_words='english')),
         ('clf', LogisticRegression())
     ])
     sentiment_model.fit(clean_df['text'], clean_df['sentiment'])
 
-    # Vectorizer and classifier for labels
     label_model = Pipeline([
         ('tfidf', TfidfVectorizer(stop_words='english')),
         ('clf', LogisticRegression())
@@ -100,22 +96,60 @@ def train_models():
 
     return sentiment_model, label_model
 
-
 sentiment_model, label_model = train_models()
 
-# User input
-user_input = st.text_area("Enter a tweet to classify:")
+# --- Create/Load user data CSV ---
+user_data_path = "TwitterData/users_data.csv"
+os.makedirs("TwitterData", exist_ok=True)
 
-# If user entered text, predict sentiment and label
-if user_input.strip():
+# Initialize if file doesn't exist
+if not os.path.exists(user_data_path):
+    pd.DataFrame(columns=["text", "sentiment", "Label"]).to_csv(user_data_path, index=False)
+
+# Load existing data
+user_df = pd.read_csv(user_data_path)
+
+# --- User Input Form ---
+with st.form("user_input_form", clear_on_submit=True):
+    user_input = st.text_area("Enter a tweet to classify:")
+    submitted = st.form_submit_button("Submit")
+
+if submitted and user_input.strip():
     predicted_sentiment = sentiment_model.predict([user_input])[0]
     predicted_label = label_model.predict([user_input])[0]
 
-    # Display results in a single-row table
-    st.markdown("### 🧾 Classification Result")
-    result_df = pd.DataFrame([{
+    # Add new entry and save
+    new_entry = pd.DataFrame([{
         "text": user_input,
         "sentiment": predicted_sentiment,
         "Label": predicted_label
     }])
-    st.dataframe(result_df)
+    user_df = pd.concat([user_df, new_entry], ignore_index=True)
+    user_df.to_csv(user_data_path, index=False)
+
+    st.success("Tweet classified and saved!")
+
+# --- Display Results (Most Recent First) ---
+if not user_df.empty:
+    st.markdown("### 🧾 Classification Result (All Submitted Tweets)")
+    st.dataframe(user_df.iloc[::-1].reset_index(drop=True))
+
+    # Side-by-side charts
+    st.markdown("### 📊 Tweet Distributions")
+
+    col1, col2 = st.columns(2)
+
+    with col1:
+        st.markdown("**Sentiment Count**")
+        fig1, ax1 = plt.subplots()
+        sns.countplot(data=user_df, x="sentiment", palette="Set2", ax=ax1)
+        ax1.set_title("Sentiment Distribution")
+        st.pyplot(fig1)
+
+    with col2:
+        st.markdown("**Label Count**")
+        fig2, ax2 = plt.subplots()
+        sns.countplot(data=user_df, x="Label", palette="Set3", ax=ax2)
+        ax2.set_title("Label (Category) Distribution")
+        st.pyplot(fig2)
+
