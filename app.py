@@ -49,7 +49,7 @@ def login():
                 st.rerun()
             else:
                 st.error("Invalid credentials")
-    st.markdown(f"##### 🔐 Not Registered, whatsapp >> +254700921906 for login credentials")
+        st.markdown(f"##### 🔐 Not Registered, whatsapp >> +254700921906 for login credentials")
 
 # ---------- Admin User Registration (Sidebar) ----------
 def add_user_ui():
