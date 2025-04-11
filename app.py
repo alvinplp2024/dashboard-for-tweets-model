@@ -377,13 +377,13 @@ if not user_df.empty:
     col1, col2 = st.columns(2)
     with col1:
         st.markdown("**Sentiment Count**")
-        fig1, ax1 = plt.subplots()
+        fig1, ax1 = plt.subplots(figsize=(12, 9))
         sns.countplot(data=user_df, x="sentiment", palette="Set2", ax=ax1)
         ax1.set_title("Sentiment Distribution")
         st.pyplot(fig1)
     with col2:
         st.markdown("**Label Count**")
-        fig2, ax2 = plt.subplots()
+        fig2, ax2 = plt.subplots(figsize=(12, 9))
         sns.countplot(data=user_df, x="Label", palette="Set3", ax=ax2)
         ax2.set_title("Label (Category) Distribution")
         st.pyplot(fig2)
